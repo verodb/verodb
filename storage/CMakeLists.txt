@@ -1,1 +1,1 @@
-add_library(schema STATIC src/schema.c)
+add_library(storage STATIC src/storage.c)

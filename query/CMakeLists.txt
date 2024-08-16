@@ -1,1 +1,1 @@
-add_library(schema STATIC src/query.c)
+add_library(query STATIC src/query.c)
