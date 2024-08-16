@@ -1,0 +1,51 @@
+# Build directories
+/build/
+/CMakeFiles/
+/CMakeCache.txt
+/Debian/
+/Makefile
+/*.cmake
+
+# Compiled object files and libraries
+*.o
+*.obj
+*.so
+*.a
+*.lib
+*.dylib
+*.dll
+
+# Executables
+*.exe
+*.out
+
+# Debug files
+*.log
+*.tmp
+
+# IDE specific files (e.g., Visual Studio Code, CLion, etc.)
+.vscode/
+.idea/
+*.suo
+*.user
+*.ncb
+*.swp
+
+# System-specific files
+.DS_Store
+Thumbs.db
+
+# Miscellaneous
+*.tgz
+*.gz
+*.zip
+*.tar
+*.7z
+*.rar
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.sqlite
+
+# Ignore all temporary files
+*~
