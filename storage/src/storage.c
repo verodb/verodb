@@ -30,13 +30,23 @@ bool insertRow(Table* table, const void* data[]) {
             row->data[i] = malloc(MAX_NAME_LENGTH);
             strncpy((char*)row->data[i], (char*)data[i], MAX_NAME_LENGTH - 1);
             ((char*)row->data[i])[MAX_NAME_LENGTH - 1] = '\0';
+        } else if (type == ARRAY) {
+            row->data[i] = malloc(table->schema.columns[i].array_size * sizeof(int));
+            memcpy(row->data[i], data[i], table->schema.columns[i].array_size * sizeof(int));
+        } else if (type == DICTIONARY) {
+            row->data[i] = malloc(MAX_NAME_LENGTH);
+            strncpy((char*)row->data[i], (char*)data[i], MAX_NAME_LENGTH - 1);
+            ((char*)row->data[i])[MAX_NAME_LENGTH - 1] = '\0';
+        } else if (type == DATE) {
+            row->data[i] = malloc(MAX_DATE_LENGTH);
+            strncpy((char*)row->data[i], (char*)data[i], MAX_DATE_LENGTH - 1);
+            ((char*)row->data[i])[MAX_DATE_LENGTH - 1] = '\0';
         }
     }
 
     return true;
 }
 
-// Print the contents of the table
 void printTable(const Table* table) {
     for (int i = 0; i < table->row_count; ++i) {
         const Row* row = &table->rows[i];
@@ -45,6 +55,20 @@ void printTable(const Table* table) {
             if (type == INTEGER) {
                 printf("%d ", *(int*)row->data[j]);
             } else if (type == STRING) {
+                printf("%s ", (char*)row->data[j]);
+            } else if (type == ARRAY) {
+                int* array = (int*)row->data[j];
+                printf("[");
+                for (int k = 0; k < table->schema.columns[j].array_size; ++k) {
+                    printf("%d", array[k]);
+                    if (k < table->schema.columns[j].array_size - 1) {
+                        printf(", ");
+                    }
+                }
+                printf("] ");
+            } else if (type == DICTIONARY) {
+                printf("%s ", (char*)row->data[j]);
+            } else if (type == DATE) {
                 printf("%s ", (char*)row->data[j]);
             }
         }
@@ -66,6 +90,14 @@ void updateRowById(Table* table, int index, const void* data[]) {
         } else if (type == STRING) {
             strncpy((char*)row->data[i], (char*)data[i], MAX_NAME_LENGTH - 1);
             ((char*)row->data[i])[MAX_NAME_LENGTH - 1] = '\0';
+        } else if (type == ARRAY) {
+            memcpy(row->data[i], data[i], table->schema.columns[i].array_size * sizeof(int));
+        } else if (type == DICTIONARY) {
+            strncpy((char*)row->data[i], (char*)data[i], MAX_NAME_LENGTH - 1);
+            ((char*)row->data[i])[MAX_NAME_LENGTH - 1] = '\0';
+        } else if (type == DATE) {
+            strncpy((char*)row->data[i], (char*)data[i], MAX_DATE_LENGTH - 1);
+            ((char*)row->data[i])[MAX_DATE_LENGTH - 1] = '\0';
         }
     }
 }
@@ -81,7 +113,6 @@ void deleteRowById(Table* table, int index) {
     }
     --table->row_count;
 }
-
 
 void freeTable(Table* table) {
     if (table) {

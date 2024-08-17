@@ -1,69 +1,75 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "storage.h"
 
+void printTableSchema(const Table* table) {
+    printf("Table Schema:\n");
+    for (int i = 0; i < table->schema.column_count; ++i) {
+        printf("Column %d: %s, Type: %d\n", i, table->schema.columns[i].name, table->schema.columns[i].type);
+    }
+    printf("\n");
+}
+
 int main() {
+    // Create a table
     Table* table = createTable();
-    if (table == NULL) {
+    if (!table) {
         printf("Failed to create table.\n");
         return 1;
     }
 
+    // Define schema
+    table->schema.column_count = 5;
+
+    // Define columns
+    strncpy(table->schema.columns[0].name, "ID", MAX_NAME_LENGTH);
     table->schema.columns[0].type = INTEGER;
-    strncpy(table->schema.columns[0].name, "ID", MAX_NAME_LENGTH - 1);
-    table->schema.columns[0].name[MAX_NAME_LENGTH - 1] = '\0';
-
+    strncpy(table->schema.columns[1].name, "Name", MAX_NAME_LENGTH);
     table->schema.columns[1].type = STRING;
-    strncpy(table->schema.columns[1].name, "Name", MAX_NAME_LENGTH - 1);
-    table->schema.columns[1].name[MAX_NAME_LENGTH - 1] = '\0';
+    strncpy(table->schema.columns[2].name, "Scores", MAX_NAME_LENGTH);
+    table->schema.columns[2].type = ARRAY;
+    table->schema.columns[2].array_size = 3;
+    strncpy(table->schema.columns[3].name, "Description", MAX_NAME_LENGTH);
+    table->schema.columns[3].type = DICTIONARY;
+    strncpy(table->schema.columns[4].name, "Date", MAX_NAME_LENGTH);
+    table->schema.columns[4].type = DATE;
 
-    table->schema.columns[2].type = INTEGER;
-    strncpy(table->schema.columns[2].name, "Age", MAX_NAME_LENGTH - 1);
-    table->schema.columns[2].name[MAX_NAME_LENGTH - 1] = '\0';
+    // Sample data for insertion
+    int id = 1;
+    char name[MAX_NAME_LENGTH] = "Alice";
+    int scores[3] = {90, 85, 92};
+    char description[MAX_NAME_LENGTH] = "subject:Math,grade:A";
+    char date[MAX_DATE_LENGTH] = "2024-08-17";
+    const void* data[5] = {&id, name, scores, description, date};
 
-    table->schema.column_count = 3;
-
-    int id1 = 1;
-    char name1[] = "Aditya";
-    int age1 = 22;
-    void* data1[] = { &id1, name1, &age1 };
-    insertRow(table, data1);
-
-    int id2 = 2;
-    char name2[] = "Harsh";
-    int age2 = 21;
-    void* data2[] = { &id2, name2, &age2 };
-    insertRow(table, data2);
-
-    printf("All rows in the table:\n");
-    printTable(table);
-
-    int index_to_retrieve = 0;
-    const Row* row = getRowById(table, index_to_retrieve);
-    if (row) {
-        printf("\nRetrieved row with index %d:\n", index_to_retrieve);
-        for (int i = 0; i < row->column_count; ++i) {
-            if (table->schema.columns[i].type == INTEGER) {
-                printf("%s: %d\n", table->schema.columns[i].name, *(int*)row->data[i]);
-            } else if (table->schema.columns[i].type == STRING) {
-                printf("%s: %s\n", table->schema.columns[i].name, (char*)row->data[i]);
-            }
-        }
-    } else {
-        printf("\nNo row found with index %d.\n", index_to_retrieve);
+    // Insert a row
+    if (!insertRow(table, data)) {
+        printf("Failed to insert row.\n");
     }
 
-    printf("\nUpdating row with index 0...\n");
-    int new_id = 100;
-    char new_name[] = "Updated Aditya";
-    int new_age = 30;
-    void* new_data[] = { &new_id, new_name, &new_age };
-    updateRowById(table, 1, new_data);
+    // Print table schema and contents
+    printTableSchema(table);
     printTable(table);
 
-    printf("\nDeleting row with index 1...\n");
-    deleteRowById(table, 1);
+    // Update row
+    int newId = 2;
+    char newName[MAX_NAME_LENGTH] = "Bob";
+    int newScores[3] = {88, 79, 91};
+    char newDescription[MAX_NAME_LENGTH] = "subject:Science,grade:B";
+    char newDate[MAX_DATE_LENGTH] = "2024-08-18";
+    const void* newData[5] = {&newId, newName, newScores, newDescription, newDate};
+    updateRowById(table, 0, newData);
+
+    printf("\nUpdated Table:\n");
     printTable(table);
 
+    deleteRowById(table, 0);
+
+    printf("\nTable After Deletion:\n");
+    printTable(table);
+
+    // Free the table
     freeTable(table);
 
     return 0;
