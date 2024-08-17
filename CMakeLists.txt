@@ -10,9 +10,16 @@ add_subdirectory(indexing)
 add_subdirectory(integration)
 add_subdirectory(security)
 add_subdirectory(utils)
+add_subdirectory(storage)
 
-# Add the main executable
 add_executable(verodb main.c)
+target_link_libraries(verodb schema indexing integration security utils storage)
 
-# Link the modules to the main executable
-target_link_libraries(verodb schema indexing integration security utils)
+target_include_directories(verodb PRIVATE 
+    ${PROJECT_SOURCE_DIR}/schema/src
+    ${PROJECT_SOURCE_DIR}/indexing/src
+    ${PROJECT_SOURCE_DIR}/integration/src
+    ${PROJECT_SOURCE_DIR}/security/src
+    ${PROJECT_SOURCE_DIR}/utils/src
+    ${PROJECT_SOURCE_DIR}/storage/src
+)
