@@ -3,15 +3,34 @@
 #include <string.h>
 #include "storage.h"
 
-Table* createTable() {
-    Table* table = (Table*)malloc(sizeof(Table));
-    if (table) {
-        table->row_count = 0;
-        table->schema.column_count = 0;
+// CREATE DATABASE
+Database* createDatabase(const char* name) {
+    Database* db = (Database*)malloc(sizeof(Database));
+    if (db) {
+        strncpy(db->name, name, MAX_NAME_LENGTH - 1);
+        db->name[MAX_NAME_LENGTH - 1] = '\0';
+        db->table_count = 0;
     }
+    return db;
+}
+
+// CREATE TABLE
+Table* createTable(Database* db, const char* table_name) {
+    if (db->table_count >= MAX_TABLES) {
+        printf("Error: Database is full.\n");
+        return NULL;
+    }
+
+    Table* table = &db->tables[db->table_count++];
+    strncpy(table->schema.columns->name, table_name, MAX_NAME_LENGTH - 1);
+    table->schema.columns->name[MAX_NAME_LENGTH - 1] = '\0';
+    table->row_count = 0;
+    table->schema.column_count = 0;
+
     return table;
 }
 
+// INSERT ROW
 bool insertRow(Table* table, const void* data[]) {
     if (table->row_count >= MAX_ROWS) {
         printf("Error: Table is full.\n");
@@ -52,6 +71,7 @@ bool insertRow(Table* table, const void* data[]) {
     return true;
 }
 
+// PRINT TABLE
 void printTable(const Table* table) {
     for (int i = 0; i < table->row_count; ++i) {
         const Row* row = &table->rows[i];
@@ -85,6 +105,7 @@ void printTable(const Table* table) {
     }
 }
 
+// UPDATE ROW
 void updateRowById(Table* table, int index, const void* data[]) {
     if (index < 0 || index >= table->row_count) {
         printf("Error: Row index %d out of bounds.\n", index);
@@ -115,6 +136,7 @@ void updateRowById(Table* table, int index, const void* data[]) {
     }
 }
 
+// DELETE ROW
 void deleteRowById(Table* table, int index) {
     if (index < 0 || index >= table->row_count) {
         printf("Error: Row index %d out of bounds.\n", index);
@@ -127,6 +149,7 @@ void deleteRowById(Table* table, int index) {
     --table->row_count;
 }
 
+// FREE TABLE
 void freeTable(Table* table) {
     if (table) {
         for (int i = 0; i < table->row_count; ++i) {
@@ -135,7 +158,16 @@ void freeTable(Table* table) {
                 free(row->data[j]);
             }
         }
-        free(table);
+    }
+}
+
+//FREE DB
+void freeDatabase(Database* db) {
+    if (db) {
+        for (int i = 0; i < db->table_count; ++i) {
+            freeTable(&db->tables[i]);
+        }
+        free(db);
     }
 }
 
