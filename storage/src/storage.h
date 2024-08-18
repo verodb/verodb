@@ -10,6 +10,7 @@
 typedef enum {
     INTEGER,
     STRING,
+    FLOAT,
     ARRAY,
     DICTIONARY,
     DATE

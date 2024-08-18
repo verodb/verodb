@@ -12,17 +12,14 @@ void printTableSchema(const Table* table) {
 }
 
 int main() {
-    // Create a table
     Table* table = createTable();
     if (!table) {
         printf("Failed to create table.\n");
         return 1;
     }
 
-    // Define schema
-    table->schema.column_count = 5;
+    table->schema.column_count = 6;
 
-    // Define columns
     strncpy(table->schema.columns[0].name, "ID", MAX_NAME_LENGTH);
     table->schema.columns[0].type = INTEGER;
     strncpy(table->schema.columns[1].name, "Name", MAX_NAME_LENGTH);
@@ -34,31 +31,31 @@ int main() {
     table->schema.columns[3].type = DICTIONARY;
     strncpy(table->schema.columns[4].name, "Date", MAX_NAME_LENGTH);
     table->schema.columns[4].type = DATE;
+    strncpy(table->schema.columns[5].name, "GPA", MAX_NAME_LENGTH);
+    table->schema.columns[5].type = FLOAT;
 
-    // Sample data for insertion
     int id = 1;
     char name[MAX_NAME_LENGTH] = "Alice";
     int scores[3] = {90, 85, 92};
     char description[MAX_NAME_LENGTH] = "subject:Math,grade:A";
     char date[MAX_DATE_LENGTH] = "2024-08-17";
-    const void* data[5] = {&id, name, scores, description, date};
+    float gpa = 3.8;
+    const void* data[6] = {&id, name, scores, description, date, &gpa};
 
-    // Insert a row
     if (!insertRow(table, data)) {
         printf("Failed to insert row.\n");
     }
 
-    // Print table schema and contents
     printTableSchema(table);
     printTable(table);
 
-    // Update row
     int newId = 2;
     char newName[MAX_NAME_LENGTH] = "Bob";
     int newScores[3] = {88, 79, 91};
     char newDescription[MAX_NAME_LENGTH] = "subject:Science,grade:B";
     char newDate[MAX_DATE_LENGTH] = "2024-08-18";
-    const void* newData[5] = {&newId, newName, newScores, newDescription, newDate};
+    float newGpa = 3.5;
+    const void* newData[6] = {&newId, newName, newScores, newDescription, newDate, &newGpa};
     updateRowById(table, 0, newData);
 
     printf("\nUpdated Table:\n");
@@ -69,7 +66,6 @@ int main() {
     printf("\nTable After Deletion:\n");
     printTable(table);
 
-    // Free the table
     freeTable(table);
 
     return 0;
