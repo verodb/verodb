@@ -12,9 +12,7 @@ Ensure you have the following installed on your system:
 
 - **CMake** (3.0 or higher)
 - **GNU Compiler Collection (GCC)** for C
-- **Flex** (for lexical analysis)
-- **Bison** (for parsing)
-
+- 
 ### Fork and Clone the Repository
 
 First, clone the repository to your local machine:
