@@ -4,16 +4,22 @@
 
 Verodb is an in-memory SQL database implemented in C, designed for educational purposes. This project includes modules for querying, parsing SQL, and managing the database structure.
 
-## Getting Started
+## Local Setup
 
-### Prerequisites
+### 1. CMake Installations
 
-Ensure you have the following installed on your system:
+For **Ubuntu/Debian-based** distributions:
+```bash
+sudo apt update
+sudo apt install cmake
+```
+For **MacOS**:
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install cmake
+```
 
-- **CMake** (3.0 or higher)
-- **GNU Compiler Collection (GCC)** for C
-- 
-### Fork and Clone the Repository
+### 2. Fork and Clone the Repository
 
 First, clone the repository to your local machine:
 
