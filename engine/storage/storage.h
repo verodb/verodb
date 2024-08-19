@@ -5,7 +5,7 @@
 
 #define MAX_NAME_LENGTH 64
 #define MAX_ROWS 100
-#define MAX_TABLES 10  // Define the maximum number of tables in a database
+#define MAX_TABLES 100
 #define MAX_DATE_LENGTH 10
 
 typedef enum {
@@ -46,7 +46,6 @@ typedef struct {
     int table_count;
 } Database;
 
-// Function prototypes
 Database* createDatabase(const char* name);
 Table* createTable(Database* db, const char* table_name);
 bool insertRow(Table* table, const void* data[]);
@@ -57,4 +56,4 @@ void freeTable(Table* table);
 void freeDatabase(Database* db);
 const Row* getRowById(const Table* table, int index);
 
-#endif // STORAGE_H
+#endif
