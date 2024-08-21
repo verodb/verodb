@@ -46,26 +46,21 @@ bool insertRow(Table* table, const void* data[]) {
         if (type == INTEGER) {
             row->data[i] = malloc(sizeof(int));
             *(int*)row->data[i] = *(int*)data[i];
-        } 
-        else if (type == FLOAT) {
+        } else if (type == FLOAT) {
             row->data[i] = malloc(sizeof(float));
             *(float*)row->data[i] = *(float*)data[i];
-        }
-        else if (type == STRING) {
+        } else if (type == STRING) {
             row->data[i] = malloc(MAX_NAME_LENGTH);
             strncpy((char*)row->data[i], (char*)data[i], MAX_NAME_LENGTH - 1);
             ((char*)row->data[i])[MAX_NAME_LENGTH - 1] = '\0';
-        } 
-        else if (type == ARRAY) {
+        } else if (type == ARRAY) {
             row->data[i] = malloc(table->schema.columns[i].array_size * sizeof(int));
             memcpy(row->data[i], data[i], table->schema.columns[i].array_size * sizeof(int));
-        } 
-        else if (type == DICTIONARY) {
+        } else if (type == DICTIONARY) {
             row->data[i] = malloc(MAX_NAME_LENGTH);
             strncpy((char*)row->data[i], (char*)data[i], MAX_NAME_LENGTH - 1);
             ((char*)row->data[i])[MAX_NAME_LENGTH - 1] = '\0';
-        } 
-        else if (type == DATE) {
+        } else if (type == DATE) {
             row->data[i] = malloc(MAX_DATE_LENGTH);
             strncpy((char*)row->data[i], (char*)data[i], MAX_DATE_LENGTH - 1);
             ((char*)row->data[i])[MAX_DATE_LENGTH - 1] = '\0';
@@ -76,6 +71,7 @@ bool insertRow(Table* table, const void* data[]) {
 }
 
 
+
 // PRINT TABLE
 void printTable(const Table* table) {
     for (int i = 0; i < table->row_count; ++i) {
@@ -84,11 +80,9 @@ void printTable(const Table* table) {
             ColumnType type = table->schema.columns[j].type;
             if (type == INTEGER) {
                 printf("%d ", *(int*)row->data[j]);
-            } 
-            else if (type == FLOAT) {
-                printf("%lf", *(float*)row->data[j]);
-            }
-            else if (type == STRING) {
+            } else if (type == FLOAT) {
+                printf("%lf ", *(float*)row->data[j]);
+            } else if (type == STRING) {
                 printf("%s ", (char*)row->data[j]);
             } else if (type == ARRAY) {
                 int* array = (int*)row->data[j];
@@ -110,6 +104,7 @@ void printTable(const Table* table) {
     }
 }
 
+
 // UPDATE ROW
 void updateRowById(Table* table, int index, const void* data[]) {
     if (index < 0 || index >= table->row_count) {
@@ -122,11 +117,9 @@ void updateRowById(Table* table, int index, const void* data[]) {
         ColumnType type = table->schema.columns[i].type;
         if (type == INTEGER) {
             *(int*)row->data[i] = *(int*)data[i];
-        } 
-        else if (type == FLOAT) {
-            *(float*)row->data[i] = *(float*)data[i]; 
-        }
-        else if (type == STRING) {
+        } else if (type == FLOAT) {
+            *(float*)row->data[i] = *(float*)data[i];
+        } else if (type == STRING) {
             strncpy((char*)row->data[i], (char*)data[i], MAX_NAME_LENGTH - 1);
             ((char*)row->data[i])[MAX_NAME_LENGTH - 1] = '\0';
         } else if (type == ARRAY) {
@@ -140,6 +133,7 @@ void updateRowById(Table* table, int index, const void* data[]) {
         }
     }
 }
+
 
 // DELETE ROW
 void deleteRowById(Table* table, int index) {

@@ -36,7 +36,7 @@ int main() {
     }
 
     Table* table = &db->tables[0];
-    table->schema.column_count = 3;
+    table->schema.column_count = 4;
     strcpy(table->schema.columns[0].name, "ID");
     table->schema.columns[0].type = INTEGER;
 
@@ -46,8 +46,10 @@ int main() {
     strcpy(table->schema.columns[2].name, "Age");
     table->schema.columns[2].type = INTEGER;
 
-    // Insert rows using INSERT INTO command
-    const char* insertQueryStr1 = "INSERT INTO Users VALUES 1, 'Harsh', 21";
+    strcpy(table->schema.columns[3].name, "JoinDate");
+    table->schema.columns[3].type = DATE;
+
+    const char* insertQueryStr1 = "INSERT INTO Users VALUES 1, 'Harsh', 21, 2024/08/02";
     query = parseInsertQuery(insertQueryStr1);
     if (query) {
         executeInsertQuery(db, query);
@@ -56,7 +58,7 @@ int main() {
         printf("Failed to parse insert query.\n");
     }
 
-    const char* insertQueryStr2 = "INSERT INTO Users VALUES 2, 'Bhat', 25";
+    const char* insertQueryStr2 = "INSERT INTO Users VALUES 2, 'Bhat', 25, 02/02/2014";
     query = parseInsertQuery(insertQueryStr2);
     if (query) {
         executeInsertQuery(db, query);
@@ -64,6 +66,7 @@ int main() {
     } else {
         printf("Failed to parse insert query.\n");
     }
+
 
     printf("Table: Users in %s\n", db->name);
     printTable(table);

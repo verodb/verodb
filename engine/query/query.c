@@ -119,7 +119,8 @@ Query* parseInsertQuery(const char* queryStr) {
         char tableName[MAX_NAME_LENGTH];
         if (sscanf(queryStr, "INSERT INTO %63s VALUES ", tableName) == 1) {
             trimWhitespace(tableName);
-            strncpy(query->tableName, tableName, MAX_NAME_LENGTH);
+            strncpy(query->tableName, tableName, MAX_NAME_LENGTH - 1);
+            query->tableName[MAX_NAME_LENGTH - 1] = '\0';
         } else {
             free(query);
             return NULL;
@@ -135,12 +136,14 @@ Query* parseInsertQuery(const char* queryStr) {
 
             while (token != NULL && i < MAX_NAME_LENGTH) {
                 trimWhitespace(token);
-                
-                // Assuming all data is treated as string initially
+
+                // Check if the value is in DATE format
+                bool isDate = (strlen(token) == 10 && token[4] == '-' && token[7] == '-');
+
                 query->rowData[i] = malloc(strlen(token) + 1);
                 strcpy(query->rowData[i], token);
+
                 i++;
-                
                 token = strtok(NULL, ",");
             }
             query->dataCount = i;
@@ -156,7 +159,6 @@ Query* parseInsertQuery(const char* queryStr) {
 
     return query;
 }
-
 void executeInsertQuery(Database* db, Query* query) {
     if (db == NULL || query == NULL) {
         printf("Invalid parameters.\n");
@@ -202,13 +204,13 @@ void executeInsertQuery(Database* db, Query* query) {
                     rowData[i] = strdup(value);
                 } else if (type == ARRAY) {
                     // Example: "[1,2,3]" -> array of integers
-                    // You may need more parsing logic here for arrays
                     int* array = malloc(table->schema.columns[i].array_size * sizeof(int));
                     // Parsing logic to convert `value` to `array`
                     rowData[i] = array;
                 } else if (type == DICTIONARY) {
                     rowData[i] = strdup(value);
                 } else if (type == DATE) {
+                    // Here we just copy the string for simplicity
                     rowData[i] = strdup(value);
                 }
             }
@@ -219,8 +221,6 @@ void executeInsertQuery(Database* db, Query* query) {
         } else {
             printf("Error inserting row into table %s.\n", query->tableName);
         }
-
-        // Free allocated row data memory
         for (int i = 0; i < table->schema.column_count; i++) {
             free(rowData[i]);
         }
