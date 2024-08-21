@@ -22,13 +22,14 @@ Table* createTable(Database* db, const char* table_name) {
     }
 
     Table* table = &db->tables[db->table_count++];
-    strncpy(table->schema.columns->name, table_name, MAX_NAME_LENGTH - 1);
-    table->schema.columns->name[MAX_NAME_LENGTH - 1] = '\0';
+    strncpy(table->name, table_name, MAX_NAME_LENGTH - 1);
+    table->name[MAX_NAME_LENGTH - 1] = '\0';
     table->row_count = 0;
     table->schema.column_count = 0;
 
     return table;
 }
+
 
 // INSERT ROW
 bool insertRow(Table* table, const void* data[]) {
@@ -54,14 +55,17 @@ bool insertRow(Table* table, const void* data[]) {
             row->data[i] = malloc(MAX_NAME_LENGTH);
             strncpy((char*)row->data[i], (char*)data[i], MAX_NAME_LENGTH - 1);
             ((char*)row->data[i])[MAX_NAME_LENGTH - 1] = '\0';
-        } else if (type == ARRAY) {
+        } 
+        else if (type == ARRAY) {
             row->data[i] = malloc(table->schema.columns[i].array_size * sizeof(int));
             memcpy(row->data[i], data[i], table->schema.columns[i].array_size * sizeof(int));
-        } else if (type == DICTIONARY) {
+        } 
+        else if (type == DICTIONARY) {
             row->data[i] = malloc(MAX_NAME_LENGTH);
             strncpy((char*)row->data[i], (char*)data[i], MAX_NAME_LENGTH - 1);
             ((char*)row->data[i])[MAX_NAME_LENGTH - 1] = '\0';
-        } else if (type == DATE) {
+        } 
+        else if (type == DATE) {
             row->data[i] = malloc(MAX_DATE_LENGTH);
             strncpy((char*)row->data[i], (char*)data[i], MAX_DATE_LENGTH - 1);
             ((char*)row->data[i])[MAX_DATE_LENGTH - 1] = '\0';
@@ -70,6 +74,7 @@ bool insertRow(Table* table, const void* data[]) {
 
     return true;
 }
+
 
 // PRINT TABLE
 void printTable(const Table* table) {
