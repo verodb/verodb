@@ -5,6 +5,7 @@
 #include "query.h"
 
 int main() {
+    // Create a database
     const char* createDbQueryStr = "CREATE DATABASE TestDB";
     Query* query = parseCreateDatabaseQuery(createDbQueryStr);
     if (!query) {
@@ -22,18 +23,20 @@ int main() {
     printf("Database %s created successfully.\n", query->databaseName);
     free(query);
 
-    // Define a new table within the created database
+    // Create a table within the database
     const char* createTableQueryStr = "CREATE TABLE Users";
     query = parseCreateTableQuery(createTableQueryStr);
     if (query) {
         executeCreateTableQuery(db, query);
         free(query);
-    } else {
+    } else {    
         printf("Failed to parse create table query.\n");
+        freeDatabase(db);
+        return 1;
     }
 
-    Table* table = &db->tables[0]; 
-    table->schema.column_count = 3;
+    Table* table = &db->tables[0];
+    table->schema.column_count = 4;
     strcpy(table->schema.columns[0].name, "ID");
     table->schema.columns[0].type = INTEGER;
 
@@ -43,18 +46,27 @@ int main() {
     strcpy(table->schema.columns[2].name, "Age");
     table->schema.columns[2].type = INTEGER;
 
-    // Insert dummy rows into the "Users" table
-    int id1 = 1;
-    const char* name1 = "Harsh";
-    int age1 = 21;
-    const void* row1[] = { &id1, name1, &age1 };
-    insertRow(table, row1);
+    strcpy(table->schema.columns[3].name, "JoinDate");
+    table->schema.columns[3].type = DATE;
 
-    int id2 = 2;
-    const char* name2 = "Bhat";
-    int age2 = 25;
-    const void* row2[] = { &id2, name2, &age2 };
-    insertRow(table, row2);
+    const char* insertQueryStr1 = "INSERT INTO Users VALUES 1, 'Harsh', 21, 2024/08/02";
+    query = parseInsertQuery(insertQueryStr1);
+    if (query) {
+        executeInsertQuery(db, query);
+        free(query);
+    } else {
+        printf("Failed to parse insert query.\n");
+    }
+
+    const char* insertQueryStr2 = "INSERT INTO Users VALUES 2, 'Bhat', 25, 02/02/2014";
+    query = parseInsertQuery(insertQueryStr2);
+    if (query) {
+        executeInsertQuery(db, query);
+        free(query);
+    } else {
+        printf("Failed to parse insert query.\n");
+    }
+
 
     printf("Table: Users in %s\n", db->name);
     printTable(table);

@@ -6,8 +6,8 @@
 #define MAX_NAME_LENGTH 64
 #define MAX_ROWS 100
 #define MAX_TABLES 100
-#define MAX_DATE_LENGTH 10
-
+#define MAX_DATE_LENGTH 12
+// Enum for column types
 typedef enum {
     INTEGER,
     STRING,
@@ -17,22 +17,26 @@ typedef enum {
     DATE
 } ColumnType;
 
+
 typedef struct {
     char name[MAX_NAME_LENGTH];
     ColumnType type;
     int array_size;  // Used only if type is ARRAY
 } Column;
 
+// Structure for schema definition of a table
 typedef struct {
     Column columns[MAX_NAME_LENGTH];
     int column_count;
 } Schema;
 
+// Structure for a row of data
 typedef struct {
     void* data[MAX_NAME_LENGTH];
     int column_count;
 } Row;
 
+// Structure for a table, including its schema and rows
 typedef struct {
     char name[MAX_NAME_LENGTH];
     Schema schema;
@@ -40,12 +44,14 @@ typedef struct {
     int row_count;
 } Table;
 
+// Structure for a database, including its tables
 typedef struct {
     char name[MAX_NAME_LENGTH];
     Table tables[MAX_TABLES];
     int table_count;
 } Database;
 
+// Function prototypes
 Database* createDatabase(const char* name);
 Table* createTable(Database* db, const char* table_name);
 bool insertRow(Table* table, const void* data[]);
@@ -56,4 +62,4 @@ void freeTable(Table* table);
 void freeDatabase(Database* db);
 const Row* getRowById(const Table* table, int index);
 
-#endif
+#endif // STORAGE_H
