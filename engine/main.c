@@ -20,7 +20,7 @@ int main() {
         return 1;
     }
 
-    printf("Database %s created successfully.\n", query->databaseName);
+    executeCreateDatabaseQuery(db, query);
     free(query);
 
     // Create a table within the database
@@ -37,19 +37,19 @@ int main() {
 
     Table* table = &db->tables[0];
     table->schema.column_count = 4;
-    strcpy(table->schema.columns[0].name, "ID");
+    strncpy(table->schema.columns[0].name, "ID", MAX_NAME_LENGTH);
     table->schema.columns[0].type = INTEGER;
 
-    strcpy(table->schema.columns[1].name, "Name");
+    strncpy(table->schema.columns[1].name, "Name", MAX_NAME_LENGTH);
     table->schema.columns[1].type = STRING;
 
-    strcpy(table->schema.columns[2].name, "Age");
+    strncpy(table->schema.columns[2].name, "Age", MAX_NAME_LENGTH);
     table->schema.columns[2].type = INTEGER;
 
-    strcpy(table->schema.columns[3].name, "JoinDate");
+    strncpy(table->schema.columns[3].name, "JoinDate", MAX_NAME_LENGTH);
     table->schema.columns[3].type = DATE;
 
-    const char* insertQueryStr1 = "INSERT INTO Users VALUES 1, 'Harsh', 21, 2024/08/02";
+    const char* insertQueryStr1 = "INSERT INTO Users VALUES 1, Harsh, 21, 2024/08/02";
     query = parseInsertQuery(insertQueryStr1);
     if (query) {
         executeInsertQuery(db, query);
@@ -58,7 +58,7 @@ int main() {
         printf("Failed to parse insert query.\n");
     }
 
-    const char* insertQueryStr2 = "INSERT INTO Users VALUES 2, 'Bhat', 25, 02/02/2014";
+    const char* insertQueryStr2 = "INSERT INTO Users VALUES 2, Bhat, 25, 2014/02/02";
     query = parseInsertQuery(insertQueryStr2);
     if (query) {
         executeInsertQuery(db, query);
@@ -67,9 +67,15 @@ int main() {
         printf("Failed to parse insert query.\n");
     }
 
-
-    printf("Table: Users in %s\n", db->name);
-    printTable(table);
+    // Test SELECT query
+    const char* selectQueryStr = "SELECT * FROM Users";
+    query = parseSelectQuery(selectQueryStr);
+    if (query) {
+        executeSelectQuery(db, query);
+        free(query);
+    } else {
+        printf("Failed to parse select query.\n");
+    }
 
     freeDatabase(db);
 
