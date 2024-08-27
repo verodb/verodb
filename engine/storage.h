@@ -7,30 +7,28 @@
 #define MAX_NAME_LENGTH 64
 #define MAX_ROWS 100
 #define MAX_TABLES 100
+#define MAX_COLUMNS 10
 #define MAX_DATE_LENGTH 12
 
 typedef enum {
     INTEGER,
     STRING,
     FLOAT,
-    ARRAY,
-    DICTIONARY,
     DATE
 } ColumnType;
 
 typedef struct {
     char name[MAX_NAME_LENGTH];
     ColumnType type;
-    uint32_t array_size;
 } Column;
 
 typedef struct {
-    Column columns[MAX_NAME_LENGTH];
+    Column columns[MAX_COLUMNS];
     uint32_t column_count;
 } Schema;
 
 typedef struct {
-    void* data[MAX_NAME_LENGTH];
+    void* data[MAX_COLUMNS];
     uint32_t column_count;
 } Row;
 
@@ -56,6 +54,8 @@ void deleteRowById(Table* table, int index);
 void freeTable(Table* table);
 void freeDatabase(Database* db);
 const Row* getRowById(const Table* table, int index);
-const Table* getTableByName(const Database* db, const char* tableName);
+Table* getTableByName(Database* db, const char* tableName);
+bool compareValue(const void* value1, const char* value2, ColumnType type);
+void updateValue(void** dest, const char* src, ColumnType type);
 
 #endif // STORAGE_H

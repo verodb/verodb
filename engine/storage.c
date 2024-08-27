@@ -47,14 +47,6 @@ bool insertRow(Table* table, const void* data[]) {
             row->data[i] = malloc(MAX_NAME_LENGTH);
             if (row->data[i] == NULL) return false;
             snprintf((char*)row->data[i], MAX_NAME_LENGTH, "%s", (char*)data[i]);
-        } else if (type == ARRAY) {
-            row->data[i] = malloc(table->schema.columns[i].array_size * sizeof(int));
-            if (row->data[i] == NULL) return false;
-            memcpy(row->data[i], data[i], table->schema.columns[i].array_size * sizeof(int));
-        } else if (type == DICTIONARY) {
-            row->data[i] = malloc(MAX_NAME_LENGTH);
-            if (row->data[i] == NULL) return false;
-            snprintf((char*)row->data[i], MAX_NAME_LENGTH, "%s", (char*)data[i]);
         } else if (type == DATE) {
             row->data[i] = malloc(MAX_DATE_LENGTH);
             if (row->data[i] == NULL) return false;
@@ -76,21 +68,7 @@ void printTable(const Table* table) {
                 printf("%d ", *(int*)row->data[j]);
             } else if (type == FLOAT) {
                 printf("%f ", *(float*)row->data[j]);
-            } else if (type == STRING) {
-                printf("%s ", (char*)row->data[j]);
-            } else if (type == ARRAY) {
-                int* array = (int*)row->data[j];
-                printf("[");
-                for (uint32_t k = 0; k < table->schema.columns[j].array_size; ++k) {
-                    printf("%d", array[k]);
-                    if (k < table->schema.columns[j].array_size - 1) {
-                        printf(", ");
-                    }
-                }
-                printf("] ");
-            } else if (type == DICTIONARY) {
-                printf("%s ", (char*)row->data[j]);
-            } else if (type == DATE) {
+            } else if (type == STRING || type == DATE) {
                 printf("%s ", (char*)row->data[j]);
             }
         }
@@ -112,10 +90,6 @@ void updateRowById(Table* table, int index, const void* data[]) {
             *(float*)row->data[i] = *(float*)data[i];
         } else if (type == STRING) {
             snprintf((char*)row->data[i], MAX_NAME_LENGTH, "%s", (char*)data[i]);
-        } else if (type == ARRAY) {
-            memcpy(row->data[i], data[i], table->schema.columns[i].array_size * sizeof(int));
-        } else if (type == DICTIONARY) {
-            snprintf((char*)row->data[i], MAX_NAME_LENGTH, "%s", (char*)data[i]);
         } else if (type == DATE) {
             snprintf((char*)row->data[i], MAX_DATE_LENGTH, "%s", (char*)data[i]);
         }
@@ -135,7 +109,7 @@ void deleteRowById(Table* table, int index) {
 
 void freeTable(Table* table) {
     if (table == NULL) return;
-    
+
     for (uint32_t i = 0; i < table->row_count; ++i) {
         Row* row = &table->rows[i];
         for (uint32_t j = 0; j < row->column_count; ++j) {
@@ -146,7 +120,7 @@ void freeTable(Table* table) {
 
 void freeDatabase(Database* db) {
     if (db == NULL) return;
-    
+
     for (uint32_t i = 0; i < db->table_count; ++i) {
         freeTable(&db->tables[i]);
     }
@@ -160,7 +134,7 @@ const Row* getRowById(const Table* table, int index) {
     return &table->rows[index];
 }
 
-const Table* getTableByName(const Database* db, const char* tableName) {
+Table* getTableByName(Database* db, const char* tableName) {
     if (db == NULL || tableName == NULL) return NULL;
 
     for (uint32_t i = 0; i < db->table_count; i++) {
@@ -169,4 +143,35 @@ const Table* getTableByName(const Database* db, const char* tableName) {
         }
     }
     return NULL;
+}
+
+bool compareValue(const void* value1, const char* value2, ColumnType type) {
+    switch (type) {
+        case INTEGER:
+            return *(int*)value1 == atoi(value2);
+        case FLOAT:
+            return *(float*)value1 == atof(value2);
+        case STRING:
+        case DATE:
+            return strcmp((char*)value1, value2) == 0;
+        default:
+            return false;
+    }
+}
+
+void updateValue(void** dest, const char* src, ColumnType type) {
+    switch (type) {
+        case INTEGER:
+            *(int*)*dest = atoi(src);
+            break;
+        case FLOAT:
+            *(float*)*dest = atof(src);
+            break;
+        case STRING:
+            snprintf((char*)*dest, MAX_NAME_LENGTH, "%s", src);
+            break;
+        case DATE:
+            snprintf((char*)*dest, MAX_DATE_LENGTH, "%s", src);
+            break;
+    }
 }

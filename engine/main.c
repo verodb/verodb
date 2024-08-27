@@ -35,21 +35,26 @@ int main() {
         return 1;
     }
 
-    Table* table = &db->tables[0];
+    // Set up table schema
+    Table* table = getTableByName(db, "Users");
+    if (!table) {
+        printf("Failed to get Users table.\n");
+        freeDatabase(db);
+        return 1;
+    }
+
     table->schema.column_count = 4;
     strncpy(table->schema.columns[0].name, "ID", MAX_NAME_LENGTH);
     table->schema.columns[0].type = INTEGER;
-
     strncpy(table->schema.columns[1].name, "Name", MAX_NAME_LENGTH);
     table->schema.columns[1].type = STRING;
-
     strncpy(table->schema.columns[2].name, "Age", MAX_NAME_LENGTH);
     table->schema.columns[2].type = INTEGER;
-
     strncpy(table->schema.columns[3].name, "JoinDate", MAX_NAME_LENGTH);
     table->schema.columns[3].type = DATE;
 
-    const char* insertQueryStr1 = "INSERT INTO Users VALUES 1, Harsh, 21, 2024/08/02";
+    // Insert data
+    const char* insertQueryStr1 = "INSERT INTO Users VALUES 1, John, 30, 2023/01/01";
     query = parseInsertQuery(insertQueryStr1);
     if (query) {
         executeInsertQuery(db, query);
@@ -58,7 +63,7 @@ int main() {
         printf("Failed to parse insert query.\n");
     }
 
-    const char* insertQueryStr2 = "INSERT INTO Users VALUES 2, Bhat, 25, 2014/02/02";
+    const char* insertQueryStr2 = "INSERT INTO Users VALUES 2, Alice, 25, 2023/02/15";
     query = parseInsertQuery(insertQueryStr2);
     if (query) {
         executeInsertQuery(db, query);
@@ -67,7 +72,8 @@ int main() {
         printf("Failed to parse insert query.\n");
     }
 
-    // Test SELECT query
+    // Select all data
+    printf("\nInitial data:\n");
     const char* selectQueryStr = "SELECT * FROM Users";
     query = parseSelectQuery(selectQueryStr);
     if (query) {
@@ -77,7 +83,26 @@ int main() {
         printf("Failed to parse select query.\n");
     }
 
-    freeDatabase(db);
+    // Update data
+    const char* updateQueryStr = "UPDATE Users SET Age = 31 WHERE ID = 1";
+    query = parseUpdateQuery(updateQueryStr);
+    if (query) {
+        executeUpdateQuery(db, query);
+        free(query);
+    } else {
+        printf("Failed to parse update query.\n");
+    }
 
+    // Select all data again to verify update
+    printf("\nAfter update:\n");
+    query = parseSelectQuery(selectQueryStr);
+    if (query) {
+        executeSelectQuery(db, query);
+        free(query);
+    } else {
+        printf("Failed to parse select query.\n");
+    }
+
+    freeDatabase(db);
     return 0;
 }

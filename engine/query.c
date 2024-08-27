@@ -22,18 +22,12 @@ Query* parseCreateDatabaseQuery(const char* queryStr) {
 
     memset(query, 0, sizeof(Query));
 
-    if (strncmp(queryStr, "CREATE DATABASE", 15) == 0) {
+    if (sscanf(queryStr, "CREATE DATABASE %63s", query->databaseName) == 1) {
         query->type = CREATE_DATABASE;
-
-        if (sscanf(queryStr, "CREATE DATABASE %63s", query->databaseName) == 1) {
-            trimWhitespace(query->databaseName);
-        } else {
-            free(query);
-            return NULL; 
-        }
+        trimWhitespace(query->databaseName);
     } else {
         free(query);
-        return NULL; 
+        return NULL;
     }
 
     return query;
@@ -47,17 +41,12 @@ Query* parseCreateTableQuery(const char* queryStr) {
 
     memset(query, 0, sizeof(Query));
 
-    if (strncmp(queryStr, "CREATE TABLE", 12) == 0) {
+    if (sscanf(queryStr, "CREATE TABLE %63s", query->tableName) == 1) {
         query->type = CREATE_TABLE;
-        if (sscanf(queryStr, "CREATE TABLE %63s", query->tableName) == 1) {
-            trimWhitespace(query->tableName);
-        } else {
-            free(query);
-            return NULL; 
-        }
+        trimWhitespace(query->tableName);
     } else {
         free(query);
-        return NULL; 
+        return NULL;
     }
 
     return query;
@@ -71,55 +60,38 @@ Query* parseInsertQuery(const char* queryStr) {
 
     memset(query, 0, sizeof(Query));
 
-    if (strncmp(queryStr, "INSERT INTO", 11) == 0) {
-        query->type = INSERT_INTO;
-
-        char tableName[MAX_NAME_LENGTH];
-        if (sscanf(queryStr, "INSERT INTO %63s VALUES ", tableName) == 1) {
-            trimWhitespace(tableName);
-            strncpy(query->tableName, tableName, MAX_NAME_LENGTH - 1);
-            query->tableName[MAX_NAME_LENGTH - 1] = '\0';
-        } else {
-            free(query);
-            return NULL;
-        }
-
-        const char* valuesPart = strstr(queryStr, "VALUES ");
-        if (valuesPart) {
-            valuesPart += 7;  // Skip "VALUES "
-            char* dataStr = strdup(valuesPart);
-            char* token = strtok(dataStr, ",");
-            int i = 0;
-
-            while (token != NULL && i < MAX_NAME_LENGTH) {
-                trimWhitespace(token);
-
-                query->rowData[i] = malloc(strlen(token) + 1);
-                if (query->rowData[i] == NULL) {
-                    // Clean up previously allocated memory
-                    for (int j = 0; j < i; j++) {
-                        free(query->rowData[j]);
-                    }
-                    free(dataStr);
-                    free(query);
-                    return NULL;
-                }
-                strcpy(query->rowData[i], token);
-
-                i++;
-                token = strtok(NULL, ",");
-            }
-            query->dataCount = i;
-            free(dataStr);
-        } else {
-            free(query);
-            return NULL;
-        }
-    } else {
+    char* tableName = malloc(MAX_NAME_LENGTH);
+    char* values = malloc(strlen(queryStr));
+    if (tableName == NULL || values == NULL) {
         free(query);
+        free(tableName);
+        free(values);
         return NULL;
     }
 
+    if (sscanf(queryStr, "INSERT INTO %63s VALUES %[^\n]", tableName, values) == 2) {
+        query->type = INSERT_INTO;
+        strncpy(query->tableName, tableName, MAX_NAME_LENGTH - 1);
+        query->tableName[MAX_NAME_LENGTH - 1] = '\0';
+        trimWhitespace(query->tableName);
+
+        char* token = strtok(values, ",");
+        while (token != NULL && query->columnCount < MAX_COLUMNS) {
+            trimWhitespace(token);
+            strncpy(query->columnValues[query->columnCount], token, MAX_NAME_LENGTH - 1);
+            query->columnValues[query->columnCount][MAX_NAME_LENGTH - 1] = '\0';
+            query->columnCount++;
+            token = strtok(NULL, ",");
+        }
+    } else {
+        free(query);
+        free(tableName);
+        free(values);
+        return NULL;
+    }
+
+    free(tableName);
+    free(values);
     return query;
 }
 
@@ -131,24 +103,75 @@ Query* parseSelectQuery(const char* queryStr) {
 
     memset(query, 0, sizeof(Query));
 
-    if (strncmp(queryStr, "SELECT", 6) == 0) {
+    if (sscanf(queryStr, "SELECT * FROM %63s", query->tableName) == 1) {
         query->type = SELECT_FROM;
-        
-        // For simplicity, we'll implement "SELECT * FROM tablename"
-        char tableName[MAX_NAME_LENGTH];
-        if (sscanf(queryStr, "SELECT * FROM %63s", tableName) == 1) {
-            strncpy(query->tableName, tableName, MAX_NAME_LENGTH - 1);
-            query->tableName[MAX_NAME_LENGTH - 1] = '\0';
-            trimWhitespace(query->tableName);
-        } else {
-            free(query);
-            return NULL;
-        }
+        trimWhitespace(query->tableName);
     } else {
         free(query);
         return NULL;
     }
 
+    return query;
+}
+
+Query* parseUpdateQuery(const char* queryStr) {
+    if (queryStr == NULL) return NULL;
+
+    Query* query = malloc(sizeof(Query));
+    if (query == NULL) return NULL;
+
+    memset(query, 0, sizeof(Query));
+
+    char* tableName = malloc(MAX_NAME_LENGTH);
+    char* setClause = malloc(strlen(queryStr));
+    char* whereClause = malloc(strlen(queryStr));
+    if (tableName == NULL || setClause == NULL || whereClause == NULL) {
+        free(query);
+        free(tableName);
+        free(setClause);
+        free(whereClause);
+        return NULL;
+    }
+
+    if (sscanf(queryStr, "UPDATE %63s SET %[^WHERE] WHERE %[^\n]", tableName, setClause, whereClause) == 3) {
+        query->type = UPDATE;
+        strncpy(query->tableName, tableName, MAX_NAME_LENGTH - 1);
+        query->tableName[MAX_NAME_LENGTH - 1] = '\0';
+        trimWhitespace(query->tableName);
+
+        char* token = strtok(setClause, ",");
+        while (token != NULL && query->columnCount < MAX_COLUMNS) {
+            trimWhitespace(token);
+            char* equalSign = strchr(token, '=');
+            if (equalSign) {
+                *equalSign = '\0';
+                strncpy(query->columnNames[query->columnCount], token, MAX_NAME_LENGTH - 1);
+                query->columnNames[query->columnCount][MAX_NAME_LENGTH - 1] = '\0';
+                trimWhitespace(query->columnNames[query->columnCount]);
+
+                strncpy(query->columnValues[query->columnCount], equalSign + 1, MAX_NAME_LENGTH - 1);
+                query->columnValues[query->columnCount][MAX_NAME_LENGTH - 1] = '\0';
+                trimWhitespace(query->columnValues[query->columnCount]);
+
+                query->columnCount++;
+            }
+            token = strtok(NULL, ",");
+        }
+
+        sscanf(whereClause, "%63s = %63s", query->whereColumn, query->whereValue);
+        trimWhitespace(query->whereColumn);
+        trimWhitespace(query->whereValue);
+    } else {
+        free(query);
+        free(tableName);
+        free(setClause);
+        free(whereClause);
+        return NULL;
+    }
+
+    free(tableName);
+    free(setClause);
+    free(whereClause);
     return query;
 }
 
@@ -192,75 +215,44 @@ void executeInsertQuery(Database* db, Query* query) {
     }
 
     if (query->type == INSERT_INTO) {
-        Table* table = NULL;
-        for (uint32_t i = 0; i < db->table_count; i++) {
-            if (strcmp(db->tables[i].name, query->tableName) == 0) {
-                table = &db->tables[i];
-                break;
-            }
-        }
-
+        Table* table = getTableByName(db, query->tableName);
         if (table == NULL) {
             printf("Table %s not found.\n", query->tableName);
             return;
         }
 
-        if (query->dataCount != table->schema.column_count) {
+        if (query->columnCount != table->schema.column_count) {
             printf("Error: Data count does not match table column count.\n");
             return;
         }
 
-        void* rowData[MAX_NAME_LENGTH] = { NULL };
+        void* rowData[MAX_COLUMNS] = { NULL };
 
         for (uint32_t i = 0; i < table->schema.column_count; i++) {
             ColumnType type = table->schema.columns[i].type;
+            char* value = query->columnValues[i];
 
-            if (i < query->dataCount) {
-                char* value = query->rowData[i];
-                
-                if (type == INTEGER) {
-                    int* intValue = malloc(sizeof(int));
-                    if (intValue == NULL) {
-                        printf("Memory allocation failed.\n");
-                        return;
-                    }
-                    *intValue = atoi(value);
-                    rowData[i] = intValue;
-                } else if (type == FLOAT) {
-                    float* floatValue = malloc(sizeof(float));
-                    if (floatValue == NULL) {
-                        printf("Memory allocation failed.\n");
-                        return;
-                    }
-                    *floatValue = atof(value);
-                    rowData[i] = floatValue;
-                } else if (type == STRING) {
-                    rowData[i] = strdup(value);
-                    if (rowData[i] == NULL) {
-                        printf("Memory allocation failed.\n");
-                        return;
-                    }
-                } else if (type == ARRAY) {
-                    // Example: "[1,2,3]" -> array of integers
-                    int* array = malloc(table->schema.columns[i].array_size * sizeof(int));
-                    if (array == NULL) {
-                        printf("Memory allocation failed.\n");
-                        return;
-                    }
-                    // Parsing logic to convert `value` to `array`
-                    rowData[i] = array;
-                } else if (type == DICTIONARY) {
-                    rowData[i] = strdup(value);
-                    if (rowData[i] == NULL) {
-                        printf("Memory allocation failed.\n");
-                        return;
-                    }
-                } else if (type == DATE) {
-                    rowData[i] = strdup(value);
-                    if (rowData[i] == NULL) {
-                        printf("Memory allocation failed.\n");
-                        return;
-                    }
+            if (type == INTEGER) {
+                int* intValue = malloc(sizeof(int));
+                if (intValue == NULL) {
+                    printf("Memory allocation failed.\n");
+                    return;
+                }
+                *intValue = atoi(value);
+                rowData[i] = intValue;
+            } else if (type == FLOAT) {
+                float* floatValue = malloc(sizeof(float));
+                if (floatValue == NULL) {
+                    printf("Memory allocation failed.\n");
+                    return;
+                }
+                *floatValue = atof(value);
+                rowData[i] = floatValue;
+            } else if (type == STRING || type == DATE) {
+                rowData[i] = strdup(value);
+                if (rowData[i] == NULL) {
+                    printf("Memory allocation failed.\n");
+                    return;
                 }
             }
         }
@@ -312,12 +304,62 @@ void executeSelectQuery(const Database* db, const Query* query) {
                 printf("%-15f", *(float*)row->data[j]);
             } else if (type == STRING || type == DATE) {
                 printf("%-15s", (char*)row->data[j]);
-            } else if (type == ARRAY) {
-                printf("%-15s", "[ARRAY]");  // Placeholder for array printing
-            } else if (type == DICTIONARY) {
-                printf("%-15s", "{DICT}");  // Placeholder for dictionary printing
             }
         }
         printf("\n");
     }
+}
+
+void executeUpdateQuery(Database* db, Query* query) {
+    if (db == NULL || query == NULL) {
+        printf("Invalid parameters.\n");
+        return;
+    }
+
+    if (query->type != UPDATE) {
+        printf("Invalid query type for update operation.\n");
+        return;
+    }
+
+    Table* table = getTableByName(db, query->tableName);
+    if (table == NULL) {
+        printf("Table %s not found.\n", query->tableName);
+        return;
+    }
+
+    int whereColumnIndex = -1;
+    for (uint32_t i = 0; i < table->schema.column_count; i++) {
+        if (strcmp(table->schema.columns[i].name, query->whereColumn) == 0) {
+            whereColumnIndex = i;
+            break;
+        }
+    }
+
+    if (whereColumnIndex == -1) {
+        printf("Where column %s not found in table %s.\n", query->whereColumn, query->tableName);
+        return;
+    }
+
+    for (uint32_t i = 0; i < table->row_count; i++) {
+        Row* row = &table->rows[i];
+        if (compareValue(row->data[whereColumnIndex], query->whereValue, table->schema.columns[whereColumnIndex].type)) {
+            for (uint32_t j = 0; j < query->columnCount; j++) {
+                int updateColumnIndex = -1;
+                for (uint32_t k = 0; k < table->schema.column_count; k++) {
+                    if (strcmp(table->schema.columns[k].name, query->columnNames[j]) == 0) {
+                        updateColumnIndex = k;
+                        break;
+                    }
+                }
+
+                if (updateColumnIndex != -1) {
+                    updateValue(&row->data[updateColumnIndex], query->columnValues[j], table->schema.columns[updateColumnIndex].type);
+                }
+            }
+            printf("Row updated successfully in table %s.\n", query->tableName);
+            return;
+        }
+    }
+
+    printf("No matching row found for update in table %s.\n", query->tableName);
 }
