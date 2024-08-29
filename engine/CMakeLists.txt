@@ -1,8 +1,7 @@
-# Specify source files for the executable
 set(SOURCES
     main.c
-    query/query.c
-    storage/storage.c
+    query.c
+    storage.c
 )
 
 # Create the executable
