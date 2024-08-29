@@ -101,7 +101,12 @@ void deleteRowById(Table* table, int index) {
         return;
     }
 
-    for (int i = index; i < (int)table->row_count - 1; ++i) {
+    Row* row = &table->rows[index];
+    for (uint32_t i = 0; i < row->column_count; ++i) {
+        free(row->data[i]);
+    }
+
+    for (uint32_t i = index; i < table->row_count - 1; ++i) {
         table->rows[i] = table->rows[i + 1];
     }
     --table->row_count;
@@ -134,7 +139,7 @@ const Row* getRowById(const Table* table, int index) {
     return &table->rows[index];
 }
 
-Table* getTableByName(Database* db, const char* tableName) {
+const Table* getTableByName(const Database* db, const char* tableName) {
     if (db == NULL || tableName == NULL) return NULL;
 
     for (uint32_t i = 0; i < db->table_count; i++) {
@@ -145,15 +150,38 @@ Table* getTableByName(Database* db, const char* tableName) {
     return NULL;
 }
 
-bool compareValue(const void* value1, const char* value2, ColumnType type) {
+bool compareValue(const void* value1, const char* value2, ColumnType type, char operator) {
     switch (type) {
-        case INTEGER:
-            return *(int*)value1 == atoi(value2);
-        case FLOAT:
-            return *(float*)value1 == atof(value2);
+        case INTEGER: {
+            int int_value1 = *(int*)value1;
+            int int_value2 = atoi(value2);
+            switch (operator) {
+                case '=': return int_value1 == int_value2;
+                case '>': return int_value1 > int_value2;
+                case '<': return int_value1 < int_value2;
+                default: return false;
+            }
+        }
+        case FLOAT: {
+            float float_value1 = *(float*)value1;
+            float float_value2 = atof(value2);
+            switch (operator) {
+                case '=': return float_value1 == float_value2;
+                case '>': return float_value1 > float_value2;
+                case '<': return float_value1 < float_value2;
+                default: return false;
+            }
+        }
         case STRING:
-        case DATE:
-            return strcmp((char*)value1, value2) == 0;
+        case DATE: {
+            int cmp = strcmp((char*)value1, value2);
+            switch (operator) {
+                case '=': return cmp == 0;
+                case '>': return cmp > 0;
+                case '<': return cmp < 0;
+                default: return false;
+            }
+        }
         default:
             return false;
     }
