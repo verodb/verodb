@@ -1,1 +1,0 @@
-/usr/bin/clang -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/verodb.dir/main.o CMakeFiles/verodb.dir/query.o CMakeFiles/verodb.dir/storage.o -o verodb
