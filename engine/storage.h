@@ -54,8 +54,8 @@ void deleteRowById(Table* table, int index);
 void freeTable(Table* table);
 void freeDatabase(Database* db);
 const Row* getRowById(const Table* table, int index);
-Table* getTableByName(Database* db, const char* tableName);
-bool compareValue(const void* value1, const char* value2, ColumnType type);
+const Table* getTableByName(const Database* db, const char* tableName);
+bool compareValue(const void* value1, const char* value2, ColumnType type, char operator);
 void updateValue(void** dest, const char* src, ColumnType type);
 
 #endif // STORAGE_H
