@@ -2,6 +2,7 @@ set(SOURCES
     main.c
     query.c
     storage.c
+    aof.c
 )
 
 # Create the executable

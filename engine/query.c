@@ -280,6 +280,11 @@ void executeCreateDatabaseQuery(Database* db, Query* query) {
     }
 
     if (query->type == CREATE_DATABASE) {
+        if (strlen(db->name) > 0) { // Check if a database already exists
+            printf("Database %s already exists.\n", db->name);
+            return;
+        }
+
         strncpy(db->name, query->databaseName, MAX_NAME_LENGTH - 1);
         db->name[MAX_NAME_LENGTH - 1] = '\0';
         printf("Database %s created successfully.\n", db->name);
